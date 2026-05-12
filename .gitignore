@@ -1,0 +1,31 @@
+# Maven
+backend/target/
+backend/.mvn/
+*.jar
+!*.jar
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Uploads
+backend/uploads/
+
+# Logs
+*.log
+logs/
