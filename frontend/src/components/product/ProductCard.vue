@@ -26,109 +26,145 @@ async function addToCart(event: Event) {
 
 <template>
   <div class="product-card" @click="goToDetail">
-    <div class="product-image-wrap">
-      <el-image :src="product.mainImage" fit="cover" class="product-image">
+    <div class="card-image">
+      <el-image :src="product.mainImage" fit="cover" lazy>
         <template #error>
-          <div class="image-placeholder">
-            <el-icon :size="48"><PictureFilled /></el-icon>
+          <div class="img-placeholder">
+            <el-icon :size="44"><PictureFilled /></el-icon>
           </div>
         </template>
       </el-image>
-      <div v-if="product.stock === 0" class="sold-out-mask">
+      <div v-if="product.stock === 0" class="sold-out-overlay">
         <span>已售罄</span>
       </div>
     </div>
-    <div class="product-info">
-      <h3 class="product-name">{{ product.name }}</h3>
-      <div class="product-price">{{ formatPrice(product.price) }}</div>
-      <div class="product-footer">
-        <span class="product-sales">已售 {{ product.sales }}</span>
-        <el-button type="primary" size="small" :disabled="product.stock === 0" @click="addToCart">
-          <el-icon><ShoppingCart /></el-icon>
-          加购
-        </el-button>
+    <div class="card-body">
+      <h3 class="card-name" :title="product.name">{{ product.name }}</h3>
+      <div class="card-price-row">
+        <span class="card-price">{{ formatPrice(product.price) }}</span>
+        <span class="card-sales">已售 {{ product.sales }}</span>
       </div>
+      <el-button class="card-add-btn" :disabled="product.stock === 0" @click="addToCart">
+        <el-icon :size="16"><ShoppingCart /></el-icon> 加入购物车
+      </el-button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .product-card {
-  background: #fff;
-  border-radius: 8px;
+  background: var(--color-white);
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
 }
 
 .product-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-hover);
 }
 
-.product-image-wrap {
+.product-card:hover .card-add-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.card-image {
   position: relative;
   width: 100%;
-  height: 220px;
-}
-
-.product-image {
-  width: 100%;
-  height: 100%;
-}
-
-.image-placeholder {
-  width: 100%;
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  color: #c0c4cc;
-}
-
-.sold-out-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.product-info {
-  padding: 16px;
-}
-
-.product-name {
-  font-size: 15px;
-  margin-bottom: 8px;
+  aspect-ratio: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  background: #FAFAFA;
 }
 
-.product-price {
+.card-image :deep(.el-image) {
+  width: 100%;
+  height: 100%;
+  transition: transform var(--transition-normal);
+}
+
+.product-card:hover .card-image :deep(.el-image img) {
+  transform: scale(1.05);
+}
+
+.img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F5F5;
+  color: #CCC;
+}
+
+.sold-out-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sold-out-overlay span {
+  color: #FFF;
   font-size: 18px;
   font-weight: 600;
-  color: #e64242;
-  margin-bottom: 8px;
+  border: 2px solid #FFF;
+  padding: 6px 20px;
+  border-radius: 20px;
 }
 
-.product-footer {
+.card-body {
+  padding: 14px;
+}
+
+.card-name {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 42px;
+  margin-bottom: 10px;
+}
+
+.card-price-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
+  margin-bottom: 10px;
 }
 
-.product-sales {
-  font-size: 12px;
-  color: #999;
+.card-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-price);
+  letter-spacing: -0.5px;
+}
+
+.card-sales {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-placeholder);
+}
+
+.card-add-btn {
+  width: 100%;
+  border-radius: 20px;
+  opacity: 0.85;
+  visibility: visible;
+  transition: all var(--transition-normal);
+}
+
+@media (min-width: 769px) {
+  .card-add-btn {
+    opacity: 0;
+    visibility: hidden;
+  }
 }
 </style>

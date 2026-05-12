@@ -12,7 +12,7 @@ const total = ref(0)
 const loading = ref(false)
 const keyword = ref((route.query.keyword as string) || '')
 const page = ref(Number(route.query.page) || 1)
-const size = 12
+const size = 20
 
 function fetchResults() {
   if (!keyword.value) return
@@ -29,7 +29,7 @@ function changePage(p: number) {
   page.value = p
   router.replace({ query: { keyword: keyword.value, page: p } })
   fetchResults()
-  window.scrollTo(0, 0)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 onMounted(fetchResults)
@@ -43,38 +43,34 @@ watch(() => route.query.keyword, (val) => {
 
 <template>
   <div class="page-container">
-    <h1 class="page-title">
-      搜索"{{ keyword }}"的结果
-      <span v-if="total > 0" class="result-count">（共 {{ total }} 件）</span>
-    </h1>
+    <div class="search-header">
+      <h1 class="page-title">
+        搜索结果：<span class="kw">"{{ keyword }}"</span>
+        <span v-if="total > 0" class="count">（共 {{ total }} 件）</span>
+      </h1>
+    </div>
     <div v-loading="loading" class="product-grid">
       <ProductCard v-for="p in products" :key="p.id" :product="p" />
     </div>
     <el-empty v-if="!loading && products.length === 0" description="未找到相关商品" />
     <div v-if="total > size" class="pagination-wrap">
-      <el-pagination layout="prev, pager, next" :total="total" :page-size="size"
+      <el-pagination layout="prev, pager, next" background :total="total" :page-size="size"
         :current-page="page" @current-change="changePage" />
     </div>
   </div>
 </template>
 
 <style scoped>
-.result-count {
-  font-size: 16px;
-  font-weight: 400;
-  color: #909399;
-}
-
+.search-header { margin-bottom: 20px; }
+.kw { color: var(--color-primary); }
+.count { font-size: var(--font-size-base); font-weight: 400; color: var(--color-text-secondary); }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   min-height: 200px;
 }
-
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-}
+.pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
+@media (max-width: 1200px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
 </style>

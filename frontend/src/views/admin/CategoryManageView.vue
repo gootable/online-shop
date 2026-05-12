@@ -8,11 +8,8 @@ const categories = ref<Category[]>([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const submitting = ref(false)
-const form = ref({
-  id: null as number | null,
-  name: '',
-  parentId: 0 as number | undefined
-})
+const form = ref({ id: null as number | null, name: '', parentId: 0 as number | undefined })
+
 onMounted(fetchCategories)
 
 async function fetchCategories() {
@@ -44,9 +41,7 @@ async function handleSubmit() {
     }
     dialogVisible.value = false
     fetchCategories()
-  } finally {
-    submitting.value = false
-  }
+  } finally { submitting.value = false }
 }
 
 async function handleDelete(cat: Category) {
@@ -62,9 +57,7 @@ function getFlatList(nodes: Category[], prefix = ''): any[] {
   let result: any[] = []
   for (const node of nodes) {
     result.push({ label: prefix + node.name, value: node.id, id: node.id })
-    if (node.children) {
-      result = result.concat(getFlatList(node.children, prefix + '├ '))
-    }
+    if (node.children) result = result.concat(getFlatList(node.children, prefix + '  '))
   }
   return result
 }
@@ -73,24 +66,25 @@ function getFlatList(nodes: Category[], prefix = ''): any[] {
 <template>
   <div>
     <div class="toolbar">
-      <el-button type="primary" @click="openCreate(0)">添加顶级分类</el-button>
+      <el-button type="primary" @click="openCreate(0)">添加分类</el-button>
     </div>
 
-    <el-table :data="categories" style="width:100%" row-key="id" default-expand-all>
-      <el-table-column prop="name" label="分类名称" min-width="200" />
-      <el-table-column prop="sortOrder" label="排序" width="80" />
-      <el-table-column label="操作" width="250">
-        <template #default="{ row }">
-          <el-button size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" type="primary" @click="openCreate(row.id)">添加子分类</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
+    <div class="card">
+      <el-table :data="categories" style="width:100%" row-key="id" default-expand-all>
+        <el-table-column prop="name" label="分类名称" min-width="300" />
+        <el-table-column prop="sortOrder" label="排序" width="80" />
+        <el-table-column label="操作" width="280">
+          <template #default="{ row }">
+            <el-button size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" type="primary" @click="openCreate(row.id)">添加子分类</el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
-    </el-table>
-
-    <el-dialog :title="isEdit ? '编辑分类' : '添加分类'" v-model="dialogVisible" width="400px">
-      <el-form :model="form" label-width="80px">
+    <el-dialog :title="isEdit ? '编辑分类' : '添加分类'" v-model="dialogVisible" width="420px">
+      <el-form :model="form" label-width="70px">
         <el-form-item label="名称">
           <el-input v-model="form.name" />
         </el-form-item>
@@ -110,7 +104,6 @@ function getFlatList(nodes: Category[], prefix = ''): any[] {
 </template>
 
 <style scoped>
-.toolbar {
-  margin-bottom: 16px;
-}
+.toolbar { margin-bottom: 16px; }
+.card { background: var(--color-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 16px; }
 </style>

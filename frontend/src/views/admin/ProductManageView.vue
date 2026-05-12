@@ -19,28 +19,19 @@ const isEdit = ref(false)
 const submitting = ref(false)
 const form = ref({
   id: null as number | null,
-  name: '',
-  description: '',
-  categoryId: null as number | null,
-  price: 0,
-  stock: 0,
-  mainImage: '',
-  status: 1
+  name: '', description: '', categoryId: null as number | null,
+  price: 0, stock: 0, mainImage: '', status: 1
 })
 
 onMounted(async () => {
-  const res = await getCategoryTree()
-  categories.value = res.data
+  try { const res = await getCategoryTree(); categories.value = res.data } catch { /* */ }
   fetchProducts()
 })
 
 function fetchProducts() {
   loading.value = true
   getProducts({ page: page.value, size, keyword: keyword.value })
-    .then(res => {
-      products.value = res.data.records
-      total.value = res.data.total
-    })
+    .then(res => { products.value = res.data.records; total.value = res.data.total })
     .finally(() => loading.value = false)
 }
 
@@ -52,16 +43,7 @@ function openCreate() {
 
 function openEdit(p: Product) {
   isEdit.value = true
-  form.value = {
-    id: p.id,
-    name: p.name,
-    description: p.description || '',
-    categoryId: p.categoryId,
-    price: p.price,
-    stock: p.stock,
-    mainImage: p.mainImage || '',
-    status: p.status
-  }
+  form.value = { id: p.id, name: p.name, description: p.description || '', categoryId: p.categoryId, price: p.price, stock: p.stock, mainImage: p.mainImage || '', status: p.status }
   dialogVisible.value = true
 }
 
@@ -78,9 +60,7 @@ async function handleSubmit() {
     }
     dialogVisible.value = false
     fetchProducts()
-  } finally {
-    submitting.value = false
-  }
+  } finally { submitting.value = false }
 }
 
 async function handleUpload(file: any) {
@@ -103,49 +83,46 @@ async function toggleStatus(p: Product) {
       <el-button type="primary" @click="openCreate">添加商品</el-button>
     </div>
 
-    <el-table v-loading="loading" :data="products" style="width:100%">
-      <el-table-column label="图片" width="80">
-        <template #default="{ row }">
-          <el-image :src="row.mainImage" fit="cover" style="width:48px;height:48px;border-radius:4px">
-            <template #error><div style="width:48px;height:48px;background:#f5f7fa" /></template>
-          </el-image>
-        </template>
-      </el-table-column>
-      <el-table-column prop="name" label="名称" min-width="180" />
-      <el-table-column prop="categoryName" label="分类" width="100" />
-      <el-table-column label="价格" width="100">
-        <template #default="{ row }">{{ formatPrice(row.price) }}</template>
-      </el-table-column>
-      <el-table-column prop="stock" label="库存" width="80" />
-      <el-table-column prop="sales" label="销量" width="80" />
-      <el-table-column label="状态" width="80">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
-            {{ row.status === 1 ? '上架' : '下架' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="180">
-        <template #default="{ row }">
-          <el-button size="small" @click="openEdit(row)">编辑</el-button>
-          <el-button size="small" :type="row.status === 1 ? 'warning' : 'success'"
-            @click="toggleStatus(row)">
-            {{ row.status === 1 ? '下架' : '上架' }}
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="card">
+      <el-table v-loading="loading" :data="products" style="width:100%">
+        <el-table-column label="图片" width="70">
+          <template #default="{ row }">
+            <el-image :src="row.mainImage" fit="cover" style="width:44px;height:44px;border-radius:6px">
+              <template #error><div style="width:44px;height:44px;background:#F5F5F7;border-radius:6px" /></template>
+            </el-image>
+          </template>
+        </el-table-column>
+        <el-table-column prop="name" label="名称" min-width="180" />
+        <el-table-column prop="categoryName" label="分类" width="100" />
+        <el-table-column label="价格" width="100">
+          <template #default="{ row }">{{ formatPrice(row.price) }}</template>
+        </el-table-column>
+        <el-table-column prop="stock" label="库存" width="70" />
+        <el-table-column prop="sales" label="销量" width="70" />
+        <el-table-column label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">{{ row.status === 1 ? '上架' : '下架' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="170">
+          <template #default="{ row }">
+            <el-button size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" :type="row.status === 1 ? 'warning' : 'success'" @click="toggleStatus(row)">
+              {{ row.status === 1 ? '下架' : '上架' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
-    <div style="margin-top:16px;text-align:center">
-      <el-pagination layout="prev, pager, next" :total="total" :page-size="size"
+    <div style="margin-top:16px;text-align:center" v-if="total > size">
+      <el-pagination background layout="prev, pager, next" :total="total" :page-size="size"
         :current-page="page" @current-change="(p: number) => { page = p; fetchProducts() }" />
     </div>
 
-    <el-dialog :title="isEdit ? '编辑商品' : '添加商品'" v-model="dialogVisible" width="560px">
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="名称">
-          <el-input v-model="form.name" />
-        </el-form-item>
+    <el-dialog :title="isEdit ? '编辑商品' : '添加商品'" v-model="dialogVisible" width="520px">
+      <el-form :model="form" label-width="70px">
+        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="分类">
           <el-select v-model="form.categoryId" placeholder="选择分类" style="width:100%">
             <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
@@ -161,13 +138,10 @@ async function toggleStatus(p: Product) {
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="图片">
-          <div>
-            <el-upload action="" :http-request="handleUpload" :show-file-list="false"
-              accept="image/*" list-type="picture-card">
-              <img v-if="form.mainImage" :src="form.mainImage" style="width:100px;height:100px;object-fit:cover" />
-              <el-icon v-else :size="28"><Plus /></el-icon>
-            </el-upload>
-          </div>
+          <el-upload action="" :http-request="handleUpload" :show-file-list="false" accept="image/*" list-type="picture-card">
+            <img v-if="form.mainImage" :src="form.mainImage" style="width:100px;height:100px;object-fit:cover;border-radius:6px" />
+            <el-icon v-else :size="24"><Plus /></el-icon>
+          </el-upload>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -179,9 +153,6 @@ async function toggleStatus(p: Product) {
 </template>
 
 <style scoped>
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
+.toolbar { display: flex; gap: 12px; margin-bottom: 16px; }
+.card { background: var(--color-white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 16px; }
 </style>

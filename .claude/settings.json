@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx uipro-cli *)",
+      "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"chinese e-commerce online shopping platform warm professional\" --design-system -p \"AiDemo网上商城\" -f markdown)",
+      "Bash(python3 __TRACKED_VAR__/.claude/skills/ui-ux-pro-max/scripts/search.py 'chinese e-commerce online shopping platform warm modern' --design-system -p AiDemo网上商城)",
+      "Bash(python search.py \"ecommerce shopping warm professional\" --design-system -p \"AiDemo\")",
+      "Bash(python search.py \"ecommerce shopping warm red coral\" --domain color)",
+      "Bash(python search.py \"modern ecommerce card grid product\" --domain style)"
+    ]
+  }
+}

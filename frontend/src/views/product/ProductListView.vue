@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProducts } from '../../api/product'
 import { getCategories } from '../../api/category'
@@ -17,12 +17,12 @@ const keyword = ref((route.query.keyword as string) || '')
 const categoryId = ref(route.query.categoryId ? Number(route.query.categoryId) : undefined)
 const sort = ref((route.query.sort as string) || 'sales_desc')
 const page = ref(Number(route.query.page) || 1)
-const size = 12
+const size = 20
 
 const sortOptions = [
-  { label: '销量优先', value: 'sales_desc' },
-  { label: '价格从低到高', value: 'price_asc' },
-  { label: '价格从高到低', value: 'price_desc' },
+  { label: '综合排序', value: 'sales_desc' },
+  { label: '价格升序', value: 'price_asc' },
+  { label: '价格降序', value: 'price_desc' },
   { label: '最新上架', value: 'newest' }
 ]
 
@@ -31,6 +31,15 @@ onMounted(async () => {
     const catRes = await getCategories()
     categories.value = catRes.data
   } catch { /* ignore */ }
+  fetchProducts()
+})
+
+// React to route query changes from header nav
+watch(() => route.query, (q) => {
+  keyword.value = (q.keyword as string) || ''
+  categoryId.value = q.categoryId ? Number(q.categoryId) : undefined
+  sort.value = (q.sort as string) || 'sales_desc'
+  page.value = Number(q.page) || 1
   fetchProducts()
 })
 
@@ -46,26 +55,24 @@ function fetchProducts() {
 
 function search() {
   page.value = 1
-  router.replace({ query: { ...route.query, keyword: keyword.value || undefined, page: 1 } })
-  fetchProducts()
+  router.replace({ query: { keyword: keyword.value || undefined, page: 1 } })
 }
 
 function selectCategory(id: number | undefined) {
   categoryId.value = id
   page.value = 1
-  router.replace({ query: { ...route.query, categoryId: id, page: 1 } })
-  fetchProducts()
+  router.replace({ query: { keyword: keyword.value || undefined, categoryId: id, page: 1 } })
 }
 
 function changeSort(val: string) {
   sort.value = val
-  fetchProducts()
+  router.replace({ query: { ...route.query, sort: val } })
 }
 
 function changePage(p: number) {
   page.value = p
   fetchProducts()
-  window.scrollTo(0, 0)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>
 
@@ -73,8 +80,9 @@ function changePage(p: number) {
   <div class="product-list-page">
     <div class="page-container">
       <div class="content-layout">
+        <!-- Sidebar -->
         <aside class="sidebar">
-          <div class="category-nav">
+          <div class="category-nav card">
             <h3>商品分类</h3>
             <ul>
               <li :class="{ active: !categoryId }" @click="selectCategory(undefined)">全部分类</li>
@@ -86,23 +94,26 @@ function changePage(p: number) {
             </ul>
           </div>
         </aside>
+
+        <!-- Main area -->
         <div class="main-area">
-          <div class="toolbar">
-            <div class="search-bar">
-              <el-input v-model="keyword" placeholder="搜索商品..." clearable @keyup.enter="search" @clear="search" />
-              <el-button type="primary" @click="search">搜索</el-button>
-            </div>
-            <div class="sort-bar">
-              <span>排序：</span>
-              <el-radio-group v-model="sort" @change="changeSort">
-                <el-radio-button v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </el-radio-button>
-              </el-radio-group>
+          <div class="toolbar card">
+            <div class="toolbar-top">
+              <el-input v-model="keyword" placeholder="搜索商品..." clearable
+                class="search-input" @keyup.enter="search" @clear="search">
+                <template #prefix><el-icon><Search /></el-icon></template>
+              </el-input>
+              <div class="sort-group">
+                <el-radio-group v-model="sort" size="small" @change="changeSort">
+                  <el-radio-button v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </el-radio-button>
+                </el-radio-group>
+              </div>
             </div>
           </div>
 
-          <div v-loading="loading" class="product-grid">
+          <div v-loading="loading" class="product-grid" element-loading-text="正在加载...">
             <ProductCard v-for="p in products" :key="p.id" :product="p" />
           </div>
 
@@ -111,6 +122,7 @@ function changePage(p: number) {
           <div v-if="total > size" class="pagination-wrap">
             <el-pagination
               layout="prev, pager, next"
+              background
               :total="total"
               :page-size="size"
               :current-page="page"
@@ -125,8 +137,9 @@ function changePage(p: number) {
 
 <style scoped>
 .product-list-page {
-  background: #f5f7fa;
+  background: var(--color-bg);
   min-height: 100vh;
+  padding-top: 8px;
 }
 
 .content-layout {
@@ -140,70 +153,57 @@ function changePage(p: number) {
 }
 
 .category-nav {
-  background: #fff;
-  border-radius: 8px;
   padding: 16px;
+  position: sticky;
+  top: 160px;
 }
 
 .category-nav h3 {
-  font-size: 16px;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-text-primary);
 }
 
-.category-nav ul {
-  list-style: none;
-}
+.category-nav ul { display: flex; flex-direction: column; gap: 2px; }
 
 .category-nav li {
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
-  color: #606266;
-  transition: all 0.2s;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
 }
 
 .category-nav li:hover {
-  background: #f0f2f5;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .category-nav li.active {
-  background: #ecf5ff;
-  color: #409eff;
-  font-weight: 500;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
-.main-area {
-  flex: 1;
-  min-width: 0;
-}
+.main-area { flex: 1; min-width: 0; }
 
 .toolbar {
-  background: #fff;
-  border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
 }
 
-.search-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.search-bar .el-input {
-  max-width: 400px;
-}
-
-.sort-bar {
+.toolbar-top {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #606266;
+  justify-content: space-between;
+  gap: 16px;
 }
+
+.search-input { max-width: 320px; }
 
 .product-grid {
   display: grid;
@@ -215,21 +215,18 @@ function changePage(p: number) {
 .pagination-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 24px;
+  margin-top: 32px;
+  padding-bottom: 20px;
 }
 
 @media (max-width: 1200px) {
-  .product-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .product-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 900px) {
-  .product-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .sidebar {
-    display: none;
-  }
+  .sidebar { display: none; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .toolbar-top { flex-direction: column; }
+  .search-input { max-width: none; }
 }
 </style>

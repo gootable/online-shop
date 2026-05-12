@@ -10,121 +10,123 @@ const stats = ref<AdminStats>({
 })
 
 onMounted(async () => {
-  const res = await getStats()
-  stats.value = res.data
+  try {
+    const res = await getStats()
+    stats.value = res.data
+  } catch { /* */ }
 })
 </script>
 
 <template>
   <div>
-    <h2 style="margin-bottom:20px">仪表盘</h2>
-    <el-row :gutter="16">
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#ecf5ff"><el-icon :size="28" color="#409eff"><User /></el-icon></div>
-            <div>
-              <div class="stat-label">用户总数</div>
-              <div class="stat-value">{{ stats.totalUsers }}</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#f0f9eb"><el-icon :size="28" color="#67c23a"><Goods /></el-icon></div>
-            <div>
-              <div class="stat-label">商品总数</div>
-              <div class="stat-value">{{ stats.totalProducts }}</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#fdf6ec"><el-icon :size="28" color="#e6a23c"><Document /></el-icon></div>
-            <div>
-              <div class="stat-label">订单总数</div>
-              <div class="stat-value">{{ stats.totalOrders }}</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover">
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#fef0f0"><el-icon :size="28" color="#f56c6c"><Money /></el-icon></div>
-            <div>
-              <div class="stat-label">总营业额</div>
-              <div class="stat-value">{{ formatPrice(stats.totalRevenue) }}</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <h2 style="margin-bottom:20px;font-size:20px;font-weight:600">仪表盘</h2>
 
-    <el-row :gutter="16" style="margin-top:16px">
-      <el-col :span="24">
-        <el-card>
-          <template #header>订单统计</template>
-            <el-row :gutter="16">
-              <el-col :span="6"><div class="order-stat"><span class="dot warning"></span>待支付：{{ stats.pendingOrders }}</div></el-col>
-              <el-col :span="6"><div class="order-stat"><span class="dot primary"></span>已支付：{{ stats.paidOrders }}</div></el-col>
-              <el-col :span="6"><div class="order-stat"><span class="dot success"></span>已发货：{{ stats.shippedOrders }}</div></el-col>
-              <el-col :span="6"><div class="order-stat"><span class="dot info"></span>已完成：{{ stats.completedOrders }}</div></el-col>
-            </el-row>
-        </el-card>
-      </el-col>
-    </el-row>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#E8F4FF"><el-icon :size="26" color="#1677FF"><User /></el-icon></div>
+        <div>
+          <div class="stat-label">用户总数</div>
+          <div class="stat-value">{{ stats.totalUsers }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#E8F8EE"><el-icon :size="26" color="#07C160"><Goods /></el-icon></div>
+        <div>
+          <div class="stat-label">在售商品</div>
+          <div class="stat-value">{{ stats.totalProducts }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#FFF5E8"><el-icon :size="26" color="#FF6B00"><Document /></el-icon></div>
+        <div>
+          <div class="stat-label">订单总数</div>
+          <div class="stat-value">{{ stats.totalOrders }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#FFF0F2"><el-icon :size="26" color="#E60012"><Money /></el-icon></div>
+        <div>
+          <div class="stat-label">总营业额</div>
+          <div class="stat-value">{{ formatPrice(stats.totalRevenue) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-stats card">
+      <h3>订单统计</h3>
+      <div class="order-stats-grid">
+        <div class="os-item"><span class="dot warning"></span>待支付 <strong>{{ stats.pendingOrders }}</strong></div>
+        <div class="os-item"><span class="dot primary"></span>已支付 <strong>{{ stats.paidOrders }}</strong></div>
+        <div class="os-item"><span class="dot success"></span>已发货 <strong>{{ stats.shippedOrders }}</strong></div>
+        <div class="os-item"><span class="dot info"></span>已完成 <strong>{{ stats.completedOrders }}</strong></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .stat-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 24px;
   display: flex;
   align-items: center;
   gap: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #909399;
+.stat-label { font-size: 14px; color: var(--color-text-secondary); }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--color-text-primary); margin-top: 2px; }
+
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #303133;
-  margin-top: 4px;
+.card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+
+.order-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
-.order-stat {
+.os-item {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 15px;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
+.os-item strong { font-size: 22px; margin-left: 4px; }
 
-.dot.warning { background: #e6a23c; }
-.dot.primary { background: #409eff; }
-.dot.success { background: #67c23a; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot.warning { background: #FF6B00; }
+.dot.primary { background: #1677FF; }
+.dot.success { background: #07C160; }
 .dot.info { background: #909399; }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .order-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>

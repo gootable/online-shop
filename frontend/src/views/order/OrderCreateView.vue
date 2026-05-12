@@ -12,11 +12,7 @@ const cartStore = useCartStore()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 
-const form = ref({
-  receiverName: '',
-  receiverPhone: '',
-  receiverAddress: ''
-})
+const form = ref({ receiverName: '', receiverPhone: '', receiverAddress: '' })
 
 const rules: FormRules = {
   receiverName: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
@@ -31,27 +27,20 @@ onMounted(() => cartStore.fetchCart())
 async function submitOrder() {
   const valid = await formRef.value?.validate()
   if (!valid) return
-
-  if (selectedItems.value.length === 0) {
-    ElMessage.warning('请选择要购买的商品')
-    return
-  }
+  if (selectedItems.value.length === 0) { ElMessage.warning('请选择商品'); return }
 
   submitting.value = true
   try {
-    const cartItemIds = selectedItems.value.map(item => item.id)
     await createOrder({
       receiverName: form.value.receiverName,
       receiverPhone: form.value.receiverPhone,
       receiverAddress: form.value.receiverAddress,
-      cartItemIds
+      cartItemIds: selectedItems.value.map(item => item.id)
     })
     ElMessage.success('下单成功')
     await cartStore.fetchCart()
     router.push('/orders')
-  } finally {
-    submitting.value = false
-  }
+  } finally { submitting.value = false }
 }
 </script>
 
@@ -59,109 +48,67 @@ async function submitOrder() {
   <div class="page-container">
     <h1 class="page-title">确认订单</h1>
 
-    <div v-if="selectedItems.length === 0" style="background:#fff;padding:40px;border-radius:8px;text-align:center">
+    <div v-if="selectedItems.length === 0" class="empty card" style="padding:60px;text-align:center">
       <el-empty description="没有选中商品">
-        <el-button type="primary" @click="router.push('/cart')">返回购物车</el-button>
+        <el-button type="primary" round @click="router.push('/cart')">返回购物车</el-button>
       </el-empty>
     </div>
 
-    <div v-else class="order-create">
-      <div class="section">
+    <div v-else class="create-content">
+      <div class="card">
         <h3>收货信息</h3>
-        <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" style="max-width:520px">
           <el-form-item label="收货人" prop="receiverName">
-            <el-input v-model="form.receiverName" placeholder="请输入收货人姓名" />
+            <el-input v-model="form.receiverName" placeholder="请输入收货人" />
           </el-form-item>
-          <el-form-item label="联系电话" prop="receiverPhone">
+          <el-form-item label="电话" prop="receiverPhone">
             <el-input v-model="form.receiverPhone" placeholder="请输入联系电话" />
           </el-form-item>
-          <el-form-item label="收货地址" prop="receiverAddress">
-            <el-input v-model="form.receiverAddress" placeholder="请输入详细收货地址" />
+          <el-form-item label="地址" prop="receiverAddress">
+            <el-input v-model="form.receiverAddress" placeholder="请输入详细地址" />
           </el-form-item>
         </el-form>
       </div>
 
-      <div class="section">
+      <div class="card">
         <h3>商品清单</h3>
-        <el-table :data="selectedItems" style="width:100%">
-          <el-table-column label="商品" min-width="300">
-            <template #default="{ row }">
-              <div class="product-cell">
-                <el-image :src="row.productImage" fit="cover" style="width:60px;height:60px;border-radius:4px">
-                  <template #error><div class="img-place"><el-icon :size="24"><PictureFilled /></el-icon></div></template>
-                </el-image>
-                <span>{{ row.productName }}</span>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="单价" width="100">
-            <template #default="{ row }">{{ formatPrice(row.price) }}</template>
-          </el-table-column>
-          <el-table-column label="数量" width="80">
-            <template #default="{ row }">{{ row.quantity }}</template>
-          </el-table-column>
-          <el-table-column label="小计" width="120">
-            <template #default="{ row }">{{ formatPrice(row.price * row.quantity) }}</template>
-          </el-table-column>
-        </el-table>
+        <div v-for="item in selectedItems" :key="item.id" class="product-item">
+          <el-image :src="item.productImage" fit="cover" class="pi-img">
+            <template #error><div class="img-fb"><el-icon><PictureFilled /></el-icon></div></template>
+          </el-image>
+          <span class="pi-name">{{ item.productName }}</span>
+          <span class="pi-price">{{ formatPrice(item.price) }}</span>
+          <span class="pi-qty">x{{ item.quantity }}</span>
+          <span class="pi-subtotal">{{ formatPrice(item.price * item.quantity) }}</span>
+        </div>
       </div>
 
-      <div class="order-footer">
-        <span class="total-text">实付金额：<strong class="total-price">{{ formatPrice(cartStore.totalPrice) }}</strong></span>
-        <el-button type="danger" size="large" :loading="submitting" @click="submitOrder">提交订单</el-button>
+      <div class="card submit-bar">
+        <span class="total-text">实付：<strong>{{ formatPrice(cartStore.totalPrice) }}</strong></span>
+        <el-button type="danger" size="large" round :loading="submitting" @click="submitOrder">提交订单</el-button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.order-create {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-}
+.create-content { display: flex; flex-direction: column; gap: 16px; }
 
-.section {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #ebeef5;
-}
+.card { background: var(--color-white); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
+.card h3 { font-size: var(--font-size-md); font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border-light); }
 
-.section h3 {
-  font-size: 16px;
-  margin-bottom: 16px;
+.product-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--color-border-light);
 }
+.pi-img { width: 64px; height: 64px; border-radius: 6px; flex-shrink: 0; border: 1px solid var(--color-border); }
+.img-fb { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; background: #F5F5F5; color: #CCC; border-radius: 6px; }
+.pi-name { flex: 1; font-size: var(--font-size-base); font-weight: 500; }
+.pi-price { color: var(--color-text-secondary); font-size: var(--font-size-base); width: 100px; text-align: center; }
+.pi-qty { color: var(--color-text-placeholder); width: 60px; text-align: center; }
+.pi-subtotal { font-size: var(--font-size-base); font-weight: 600; color: var(--color-price); width: 100px; text-align: right; }
 
-.product-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.img-place {
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  color: #c0c4cc;
-  border-radius: 4px;
-}
-
-.order-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
-.total-text {
-  font-size: 15px;
-}
-
-.total-price {
-  font-size: 22px;
-  color: #e64242;
-}
+.submit-bar { display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
+.total-text { font-size: var(--font-size-base); }
+.total-text strong { font-size: 24px; color: var(--color-price); }
 </style>
