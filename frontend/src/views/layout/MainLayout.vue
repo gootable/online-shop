@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../../stores/user'
 import { useCartStore } from '../../stores/cart'
-import { getCategories } from '../../api/category'
+import { getCategoryTree } from '../../api/category'
 import type { Category } from '../../types'
 
 const router = useRouter()
@@ -19,7 +19,7 @@ onMounted(async () => {
     cartStore.fetchCart()
   }
   try {
-    const res = await getCategories()
+    const res = await getCategoryTree()
     navCategories.value = res.data
   } catch { /* ignore */ }
 })
@@ -300,23 +300,46 @@ function handleLogout() {
 .category-nav-bar {
   border-top: 2px solid var(--color-primary);
   background: var(--color-white);
+  position: relative;
 }
 
 .nav-content {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
   display: flex;
   gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 40px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 40px), transparent 100%);
+}
+
+.nav-content::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .nav-item {
-  padding: 12px 20px;
+  padding: 12px 18px;
   font-size: var(--font-size-md);
   color: var(--color-text-regular);
   position: relative;
   transition: all var(--transition-fast);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.nav-item:first-child {
+  padding-left: 4px;
+}
+
+.nav-item:last-child {
+  padding-right: 40px; /* extra space for fade gradient */
 }
 
 .nav-item:hover, .nav-item.active {
@@ -406,8 +429,8 @@ function handleLogout() {
   .logo-text { font-size: 18px; }
   .header-search { order: 3; flex-basis: 100%; max-width: none; }
   .top-bar { display: none; }
-  .nav-content { overflow-x: auto; }
-  .nav-item { white-space: nowrap; padding: 10px 14px; font-size: var(--font-size-base); }
+  .nav-content { padding: 0 8px; }
+  .nav-item { padding: 10px 14px; font-size: var(--font-size-base); }
   .footer-content { flex-wrap: wrap; gap: 24px; }
   .footer-col { flex-basis: 45%; }
 }

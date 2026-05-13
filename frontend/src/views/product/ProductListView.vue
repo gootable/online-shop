@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getProducts } from '../../api/product'
-import { getCategories } from '../../api/category'
+import { getCategoryTree } from '../../api/category'
 import ProductCard from '../../components/product/ProductCard.vue'
 import type { Product, Category } from '../../types'
 
 const route = useRoute()
 const router = useRouter()
 const products = ref<Product[]>([])
-const categories = ref<Category[]>([])
+const categoryTree = ref<Category[]>([])
 const total = ref(0)
 const loading = ref(false)
 
@@ -26,10 +26,57 @@ const sortOptions = [
   { label: '最新上架', value: 'newest' }
 ]
 
+// Track which parent categories are expanded
+const expandedIds = reactive(new Set<number>())
+
+// Find all ancestor IDs for a given category ID
+function getAncestorIds(catId: number, nodes: Category[], path: number[] = []): number[] {
+  for (const node of nodes) {
+    if (node.id === catId) return path
+    if (node.children && node.children.length > 0) {
+      const found = getAncestorIds(catId, node.children, [...path, node.id])
+      if (found.length > 0 || node.id === catId) return found
+    }
+  }
+  return []
+}
+
+// Expand ancestors AND the category itself (if it has children)
+function expandAncestors(catId: number | undefined) {
+  if (!catId) return
+  const ancestors = getAncestorIds(catId, categoryTree.value)
+  ancestors.forEach(id => expandedIds.add(id))
+  // Also expand the category itself if it has children
+  expandedIds.add(catId)
+}
+
+// Visible items: only children of expanded parents (or depth 0)
+interface FlatCategory extends Category {
+  depth: number
+  isParent: boolean
+  expanded: boolean
+}
+const flatCategories = computed<FlatCategory[]>(() => {
+  const result: FlatCategory[] = []
+  function walk(nodes: Category[], depth: number) {
+    for (const node of nodes) {
+      const hasChildren = !!(node.children && node.children.length > 0)
+      const isExpanded = expandedIds.has(node.id)
+      result.push({ ...node, depth, isParent: hasChildren, expanded: isExpanded })
+      if (hasChildren && isExpanded && node.children) {
+        walk(node.children, depth + 1)
+      }
+    }
+  }
+  walk(categoryTree.value, 0)
+  return result
+})
+
 onMounted(async () => {
   try {
-    const catRes = await getCategories()
-    categories.value = catRes.data
+    const res = await getCategoryTree()
+    categoryTree.value = res.data
+    expandAncestors(categoryId.value)
   } catch { /* ignore */ }
   fetchProducts()
 })
@@ -37,11 +84,30 @@ onMounted(async () => {
 // React to route query changes from header nav
 watch(() => route.query, (q) => {
   keyword.value = (q.keyword as string) || ''
-  categoryId.value = q.categoryId ? Number(q.categoryId) : undefined
+  const newCatId = q.categoryId ? Number(q.categoryId) : undefined
+  categoryId.value = newCatId
   sort.value = (q.sort as string) || 'sales_desc'
   page.value = Number(q.page) || 1
+  expandAncestors(newCatId)
   fetchProducts()
 })
+
+function toggleExpand(cat: FlatCategory) {
+  if (expandedIds.has(cat.id)) {
+    expandedIds.delete(cat.id)
+  } else {
+    expandedIds.add(cat.id)
+  }
+}
+
+function countChildren(cat: FlatCategory): number {
+  if (!cat.children) return 0
+  let count = cat.children.length
+  for (const child of cat.children) {
+    if (child.children) count += child.children.length
+  }
+  return count
+}
 
 function fetchProducts() {
   loading.value = true
@@ -84,14 +150,37 @@ function changePage(p: number) {
         <aside class="sidebar">
           <div class="category-nav card">
             <h3>商品分类</h3>
-            <ul>
-              <li :class="{ active: !categoryId }" @click="selectCategory(undefined)">全部分类</li>
-              <li v-for="cat in categories" :key="cat.id"
-                  :class="{ active: categoryId === cat.id }"
-                  @click="selectCategory(cat.id)">
-                {{ cat.name }}
-              </li>
-            </ul>
+            <div class="cat-list" v-if="categoryTree.length > 0">
+              <div class="cat-item all-item" :class="{ active: !categoryId }" @click="selectCategory(undefined)">
+                <span class="cat-text">全部分类</span>
+                <span v-if="!categoryId" class="cat-count-badge"></span>
+              </div>
+
+              <div v-for="cat in flatCategories" :key="cat.id" class="cat-group">
+                <div
+                  class="cat-item"
+                  :class="{
+                    active: categoryId === cat.id,
+                    'depth-0': cat.depth === 0 && cat.isParent,
+                    'depth-1': cat.depth === 1,
+                    'depth-2': cat.depth >= 2,
+                    expanded: cat.isParent && cat.expanded
+                  }"
+                  @click="cat.isParent ? toggleExpand(cat) : selectCategory(cat.id)"
+                >
+                  <span v-if="cat.isParent" class="cat-arrow">
+                    <el-icon :size="14" class="arrow-icon">
+                      <ArrowRight v-if="!cat.expanded" />
+                      <ArrowDown v-else />
+                    </el-icon>
+                  </span>
+                  <span class="cat-text" @click.stop="cat.isParent ? selectCategory(cat.id) : undefined">
+                    {{ cat.name }}
+                  </span>
+                  <span v-if="cat.isParent" class="cat-count">{{ countChildren(cat) }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -153,40 +242,154 @@ function changePage(p: number) {
 }
 
 .category-nav {
-  padding: 16px;
+  padding: 0;
   position: sticky;
   top: 160px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .category-nav h3 {
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--color-primary);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  padding: 20px 20px 16px;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
-.category-nav ul { display: flex; flex-direction: column; gap: 2px; }
+.cat-list {
+  padding: 0 12px 16px;
+}
 
-.category-nav li {
+/* Individual item */
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 12px;
+  margin: 2px 4px;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 6px;
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   transition: all var(--transition-fast);
+  position: relative;
+  user-select: none;
 }
 
-.category-nav li:hover {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+.cat-item:hover {
+  background: #F5F5F5;
 }
 
-.category-nav li.active {
-  background: var(--color-primary-light);
+.cat-item.active {
+  background: linear-gradient(135deg, #FFF0F2, #FFF5F5);
   color: var(--color-primary);
   font-weight: 600;
+}
+
+/* All categories */
+.cat-item.all-item {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--color-border-light);
+  border-radius: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.cat-item.all-item:hover {
+  background: #FAFAFA;
+}
+
+.cat-item.all-item.active {
+  background: linear-gradient(135deg, #FFF0F2, #FFF5F5);
+  border-bottom-color: transparent;
+  border-radius: 8px;
+  margin: 2px 4px 6px;
+}
+
+/* Hierarchy depth */
+.cat-item.depth-0 {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 10px 12px;
+  margin-top: 4px;
+}
+
+.cat-item.depth-1 {
+  padding-left: 28px;
+  font-size: var(--font-size-sm);
+  margin: 1px 4px 1px 8px;
+  border-left: 2px solid transparent;
+}
+
+.cat-item.depth-1:hover {
+  border-left-color: #E0E0E0;
+}
+
+.cat-item.depth-1.active {
+  border-left-color: var(--color-primary);
+}
+
+.cat-item.depth-2 {
+  padding-left: 46px;
+  font-size: var(--font-size-xs);
+  margin: 1px 4px 1px 16px;
+  border-left: 2px solid transparent;
+}
+
+.cat-item.depth-2:hover {
+  border-left-color: #E0E0E0;
+}
+
+.cat-item.depth-2.active {
+  border-left-color: var(--color-primary);
+}
+
+/* Arrow icon */
+.cat-arrow {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-text-placeholder);
+  transition: transform var(--transition-fast);
+}
+
+.cat-item:hover .cat-arrow {
+  color: var(--color-text-secondary);
+}
+
+.arrow-icon {
+  transition: transform var(--transition-fast);
+}
+
+/* Category text */
+.cat-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Child count badge */
+.cat-count {
+  font-size: 11px;
+  color: var(--color-text-placeholder);
+  background: #F0F0F0;
+  padding: 1px 7px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.cat-item.active .cat-count {
+  background: rgba(230, 0, 18, 0.1);
+  color: var(--color-primary);
 }
 
 .main-area { flex: 1; min-width: 0; }

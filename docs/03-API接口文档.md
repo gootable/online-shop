@@ -251,7 +251,7 @@ GET /api/products?page=1&size=10&keyword=手机&categoryId=5&sort=sales_desc
 | page | int | 否 | 页码，默认 1 |
 | size | int | 否 | 每页条数，默认 10 |
 | keyword | string | 否 | 搜索关键词（模糊匹配商品名） |
-| categoryId | long | 否 | 分类 ID |
+| categoryId | long | 否 | 分类 ID（自动包含所有子类商品） |
 | sort | string | 否 | price_asc / price_desc / sales_desc / newest |
 
 **响应:**

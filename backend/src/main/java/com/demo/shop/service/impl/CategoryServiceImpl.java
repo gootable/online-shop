@@ -12,9 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +21,49 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryMapper categoryMapper;
     private final ProductMapper productMapper;
+
+    // Cache: parentId → child IDs
+    private volatile Map<Long, List<Long>> parentChildCache;
+    private volatile long cacheTimestamp = 0;
+
+    private Map<Long, List<Long>> getParentChildMap() {
+        if (parentChildCache == null || System.currentTimeMillis() - cacheTimestamp > 60000) {
+            List<Category> all = categoryMapper.selectList(null);
+            Map<Long, List<Long>> map = new HashMap<>();
+            for (Category c : all) {
+                if (c.getParentId() != null && c.getParentId() > 0) {
+                    map.computeIfAbsent(c.getParentId(), k -> new ArrayList<>()).add(c.getId());
+                }
+            }
+            parentChildCache = map;
+            cacheTimestamp = System.currentTimeMillis();
+        }
+        return parentChildCache;
+    }
+
+    private void invalidateCache() {
+        parentChildCache = null;
+    }
+
+    @Override
+    public Set<Long> getDescendantIds(Long categoryId) {
+        Set<Long> ids = new LinkedHashSet<>();
+        ids.add(categoryId);
+        Map<Long, List<Long>> pcMap = getParentChildMap();
+        collectDescendants(categoryId, pcMap, ids);
+        return ids;
+    }
+
+    private void collectDescendants(Long parentId, Map<Long, List<Long>> pcMap, Set<Long> collector) {
+        List<Long> children = pcMap.get(parentId);
+        if (children != null) {
+            for (Long childId : children) {
+                if (collector.add(childId)) {
+                    collectDescendants(childId, pcMap, collector);
+                }
+            }
+        }
+    }
 
     @Override
     public List<CategoryVO> listAll() {
@@ -79,11 +120,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void create(Category category) {
         categoryMapper.insert(category);
+        invalidateCache();
     }
 
     @Override
     public void update(Category category) {
         categoryMapper.updateById(category);
+        invalidateCache();
     }
 
     @Override
@@ -101,6 +144,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException("该分类下有商品，无法删除");
         }
         categoryMapper.deleteById(id);
+        invalidateCache();
     }
 
     private CategoryVO toVO(Category c) {

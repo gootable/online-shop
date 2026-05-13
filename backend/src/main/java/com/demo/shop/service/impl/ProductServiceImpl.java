@@ -7,8 +7,13 @@ import com.demo.shop.common.PageResult;
 import com.demo.shop.dto.ProductQueryRequest;
 import com.demo.shop.entity.Category;
 import com.demo.shop.entity.Product;
-import com.demo.shop.mapper.CategoryMapper;
+import com.demo.shop.common.BusinessException;
+import com.demo.shop.common.PageResult;
+import com.demo.shop.dto.ProductQueryRequest;
+import com.demo.shop.entity.Category;
+import com.demo.shop.entity.Product;
 import com.demo.shop.mapper.ProductMapper;
+import com.demo.shop.service.CategoryService;
 import com.demo.shop.service.ProductService;
 import com.demo.shop.vo.ProductVO;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,9 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +30,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
-    private final CategoryMapper categoryMapper;
+    private final CategoryService categoryService;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -39,7 +42,8 @@ public class ProductServiceImpl implements ProductService {
             wrapper.like(Product::getName, request.getKeyword());
         }
         if (request.getCategoryId() != null) {
-            wrapper.eq(Product::getCategoryId, request.getCategoryId());
+            Set<Long> categoryIds = categoryService.getDescendantIds(request.getCategoryId());
+            wrapper.in(Product::getCategoryId, new ArrayList<>(categoryIds));
         }
 
         // Sort
@@ -136,7 +140,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Category name
         if (p.getCategoryId() != null) {
-            Category category = categoryMapper.selectById(p.getCategoryId());
+            Category category = categoryService.getById(p.getCategoryId());
             if (category != null) {
                 vo.setCategoryName(category.getName());
             }
@@ -158,15 +162,4 @@ public class ProductServiceImpl implements ProductService {
         return vo;
     }
 
-    // Efficient batch loading categories
-    private Map<Long, String> loadCategoryNames(List<Product> products) {
-        List<Long> categoryIds = products.stream()
-                .map(Product::getCategoryId)
-                .distinct()
-                .collect(Collectors.toList());
-        if (categoryIds.isEmpty()) return Map.of();
-        List<Category> categories = categoryMapper.selectBatchIds(categoryIds);
-        return categories.stream()
-                .collect(Collectors.toMap(Category::getId, Category::getName));
-    }
 }
