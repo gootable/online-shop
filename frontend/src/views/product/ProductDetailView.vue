@@ -56,7 +56,13 @@ const thumbImages = computed(() => {
       <!-- Gallery -->
       <div class="gallery">
         <div class="main-img">
-          <el-image :src="currentImage" fit="contain" style="width:100%;aspect-ratio:1">
+          <el-image :src="currentImage" fit="contain"
+            style="width:100%;aspect-ratio:1;cursor:zoom-in"
+            :preview-src-list="thumbImages"
+            :preview-teleported="true"
+            :zoom-rate="1.2"
+            :initial-index="thumbImages.indexOf(currentImage)"
+            preview-teleported>
             <template #error>
               <div class="img-placeholder"><el-icon :size="64"><PictureFilled /></el-icon></div>
             </template>
@@ -66,7 +72,10 @@ const thumbImages = computed(() => {
           <div v-for="(img, i) in thumbImages" :key="i"
                :class="['thumb', { active: currentImage === img }]"
                @click="currentImage = img">
-            <el-image :src="img" fit="cover" style="width:64px;height:64px;border-radius:6px" />
+            <el-image :src="img" fit="cover" style="width:64px;height:64px;border-radius:6px"
+              :preview-src-list="thumbImages"
+              :preview-teleported="true"
+              :initial-index="i" />
           </div>
         </div>
       </div>

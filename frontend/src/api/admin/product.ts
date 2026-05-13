@@ -20,7 +20,5 @@ export function updateProductStatus(id: number, status: number): Promise<Result<
 export function uploadImage(file: File): Promise<Result<string>> {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post('/admin/products/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  })
+  return request.post('/admin/products/upload', formData)
 }

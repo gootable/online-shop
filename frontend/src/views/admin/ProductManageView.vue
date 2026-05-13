@@ -63,8 +63,9 @@ async function handleSubmit() {
   } finally { submitting.value = false }
 }
 
-async function handleUpload(file: any) {
-  const res = await uploadImage(file.raw)
+async function handleUpload(options: any) {
+  const rawFile = options.file
+  const res = await uploadImage(rawFile)
   form.value.mainImage = res.data
 }
 
@@ -138,7 +139,7 @@ async function toggleStatus(p: Product) {
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="图片">
-          <el-upload action="" :http-request="handleUpload" :show-file-list="false" accept="image/*" list-type="picture-card">
+          <el-upload :http-request="handleUpload" :show-file-list="false" accept="image/*" list-type="picture-card">
             <img v-if="form.mainImage" :src="form.mainImage" style="width:100px;height:100px;object-fit:cover;border-radius:6px" />
             <el-icon v-else :size="24"><Plus /></el-icon>
           </el-upload>
