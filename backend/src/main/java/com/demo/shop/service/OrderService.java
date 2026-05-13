@@ -11,6 +11,7 @@ public interface OrderService {
     OrderVO getDetail(Long orderId, Long userId);
     void cancel(Long orderId, Long userId);
     void pay(Long orderId, Long userId);
+    void confirm(Long orderId, Long userId);
     PageResult<OrderVO> pageAll(int page, int size, Integer status, String orderNo);
     void ship(Long orderId);
     void deliver(Long orderId);

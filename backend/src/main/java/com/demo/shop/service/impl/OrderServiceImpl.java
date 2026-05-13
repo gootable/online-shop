@@ -222,6 +222,32 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    public void confirm(Long orderId, Long userId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null || !order.getUserId().equals(userId)) {
+            throw new BusinessException("订单不存在");
+        }
+        if (order.getStatus() != 2) {
+            throw new BusinessException("只能确认已发货的订单");
+        }
+        order.setStatus(4);   // 用户确认收货 → 交易完成
+        order.setDeliverTime(LocalDateTime.now());
+        orderMapper.updateById(order);
+
+        // Increment sales
+        List<OrderItem> items = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
+        for (OrderItem item : items) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null) {
+                product.setSales(product.getSales() + item.getQuantity());
+                productMapper.updateById(product);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void deliver(Long orderId) {
         Order order = orderMapper.selectById(orderId);
         if (order == null) throw new BusinessException("订单不存在");

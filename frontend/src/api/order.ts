@@ -25,3 +25,7 @@ export function cancelOrder(id: number): Promise<Result<null>> {
 export function payOrder(id: number): Promise<Result<null>> {
   return request.put(`/orders/${id}/pay`)
 }
+
+export function confirmOrder(id: number): Promise<Result<null>> {
+  return request.put(`/orders/${id}/confirm`)
+}

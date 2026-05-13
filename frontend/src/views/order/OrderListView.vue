@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getOrders, cancelOrder, payOrder } from '../../api/order'
+import { getOrders, cancelOrder, payOrder, confirmOrder } from '../../api/order'
 import { formatPrice, formatDate } from '../../utils/format'
 import { OrderStatusMap } from '../../types'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -59,6 +59,15 @@ async function handlePay(order: Order) {
   ElMessage.success('支付成功')
   fetchOrders()
 }
+
+async function handleConfirm(order: Order) {
+  try {
+    await ElMessageBox.confirm('确认已收到商品？', '确认收货', { type: 'success', confirmButtonText: '确认收货' })
+    await confirmOrder(order.id)
+    ElMessage.success('已确认收货')
+    fetchOrders()
+  } catch { /* cancelled */ }
+}
 </script>
 
 <template>
@@ -94,6 +103,7 @@ async function handlePay(order: Order) {
           <div class="order-actions">
             <el-button v-if="order.status === 0" type="danger" size="small" round @click="handlePay(order)">立即支付</el-button>
             <el-button v-if="order.status === 0" size="small" round @click="handleCancel(order)">取消</el-button>
+            <el-button v-if="order.status === 2" type="success" size="small" round @click="handleConfirm(order)">确认收货</el-button>
             <el-button size="small" round @click="router.push(`/orders/${order.id}`)">详情</el-button>
           </div>
         </div>

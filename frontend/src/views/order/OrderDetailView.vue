@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getOrderDetail, cancelOrder, payOrder } from '../../api/order'
+import { getOrderDetail, cancelOrder, payOrder, confirmOrder } from '../../api/order'
 import { formatPrice, formatDate } from '../../utils/format'
 import { OrderStatusMap } from '../../types'
 import type { Order } from '../../types'
@@ -21,7 +21,11 @@ const steps = [
 ]
 
 function getActive(status: number) {
-  if (status <= 0) return 0
+  if (status === -1) return -1   // cancelled: no step active
+  if (status === 0) return 1     // pending payment, created is done
+  if (status === 1) return 2     // paid, payment is done
+  if (status === 2) return 3     // shipped, shipping is done
+  if (status >= 3) return steps.length  // completed (delivered/received): all steps done
   return status
 }
 
@@ -33,7 +37,7 @@ onMounted(async () => {
     if (order.value.createdAt) steps[0].desc = formatDate(order.value.createdAt)
     if (order.value.payTime) steps[1].desc = formatDate(order.value.payTime)
     if (order.value.shipTime) steps[2].desc = formatDate(order.value.shipTime)
-    if (order.value.deliverTime) steps[3].desc = formatDate(order.value.deliverTime)
+    if (order.value.deliverTime) { steps[3].desc = formatDate(order.value.deliverTime); steps[4].desc = formatDate(order.value.deliverTime) }
   } finally { loading.value = false }
 })
 
@@ -50,6 +54,15 @@ async function handlePay() {
   await payOrder(order.value!.id)
   ElMessage.success('支付成功')
   order.value = (await getOrderDetail(order.value!.id)).data
+}
+
+async function handleConfirm() {
+  try {
+    await ElMessageBox.confirm('确认已收到商品？', '确认收货', { type: 'success', confirmButtonText: '确认收货' })
+    await confirmOrder(order.value!.id)
+    ElMessage.success('已确认收货')
+    order.value = (await getOrderDetail(order.value!.id)).data
+  } catch { /* cancelled */ }
 }
 
 </script>
@@ -112,6 +125,7 @@ async function handlePay() {
         <div class="actions">
           <el-button v-if="order.status === 0" type="danger" round @click="handlePay">立即支付</el-button>
           <el-button v-if="order.status === 0" round @click="handleCancel">取消订单</el-button>
+          <el-button v-if="order.status === 2" type="success" round @click="handleConfirm">确认收货</el-button>
           <el-button round @click="router.push('/orders')">返回列表</el-button>
         </div>
       </div>

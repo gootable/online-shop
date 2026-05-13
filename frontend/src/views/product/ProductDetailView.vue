@@ -61,8 +61,7 @@ const thumbImages = computed(() => {
             :preview-src-list="thumbImages"
             :preview-teleported="true"
             :zoom-rate="1.2"
-            :initial-index="thumbImages.indexOf(currentImage)"
-            preview-teleported>
+            :initial-index="thumbImages.indexOf(currentImage)">
             <template #error>
               <div class="img-placeholder"><el-icon :size="64"><PictureFilled /></el-icon></div>
             </template>

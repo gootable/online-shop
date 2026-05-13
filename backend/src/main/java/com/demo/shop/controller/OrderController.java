@@ -53,4 +53,11 @@ public class OrderController {
         orderService.pay(id, userId);
         return Result.ok();
     }
+
+    @PutMapping("/{id}/confirm")
+    public Result<Void> confirm(@PathVariable Long id) {
+        Long userId = UserContext.getCurrentUserId();
+        orderService.confirm(id, userId);
+        return Result.ok();
+    }
 }
