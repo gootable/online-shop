@@ -2,6 +2,22 @@
 
 软件工程本科课程设计项目，基于 Spring Boot + Vue 3 的前后端分离电商系统。
 
+## 项目截图
+
+<details open>
+<summary><b>🖼️ 点击查看项目实际效果图</b></summary>
+
+### 1. 登录界面
+![登录界面](docs/images/login.png "商城系统登录")
+
+### 2. 主界面
+![主界面图](docs/images/main.png "商品首页浏览")
+
+### 3. 后台管理首页
+![后台管理图](docs/images/admin.png "管理员仪表盘")
+
+</details>
+
 ## 技术栈
 
 | 层级 | 技术 | 版本 |
