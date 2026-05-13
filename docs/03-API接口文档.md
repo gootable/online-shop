@@ -503,6 +503,19 @@ PUT /api/orders/1/cancel
 
 ---
 
+### PUT /api/orders/{id}/confirm — 确认收货
+
+**需认证**
+
+```
+PUT /api/orders/1/confirm
+```
+
+**限制:** 只能确认 `status == 2 (SHIPPED)` 的订单
+**处理逻辑:** 验证订单归属 → 状态 → COMPLETED(4) → 记录 deliverTime → 增加商品销量
+
+---
+
 ### PUT /api/orders/{id}/pay — 模拟支付
 
 ```
