@@ -26,6 +26,9 @@ Thumbs.db
 # Uploads
 backend/uploads/
 
+# Claude
+.claude/
+
 # Logs
 *.log
 logs/
