@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#fd79a8"/>
+  <path d="M200 50 L170 120 L140 200 L260 200 L230 120 Z" fill="#fff" opacity="0.9"/>
+  <rect x="140" y="200" width="120" height="140" rx="4" fill="#fff" opacity="0.85"/>
+  <text x="200" y="380" text-anchor="middle" fill="#fff" font-size="20" font-family="sans-serif" font-weight="bold">碎花连衣裙</text>
+</svg>

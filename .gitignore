@@ -23,9 +23,10 @@ Thumbs.db
 .env
 .env.local
 
-# Uploads — track directory, ignore runtime files
+# Uploads — track directory + placeholder images, ignore runtime uploads
 backend/uploads/*
 !backend/uploads/.gitkeep
+!backend/uploads/*.svg
 
 # Claude
 .claude/

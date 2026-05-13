@@ -89,14 +89,14 @@ INSERT IGNORE INTO categories (id, name, parent_id, sort_order) VALUES
 (8, '男装', 2, 1), (9, '女装', 2, 2);
 
 -- 商品
-INSERT IGNORE INTO products (id, name, description, category_id, price, stock, status, sales) VALUES
-(1, 'iPhone 15 智能手机', '全新 A16 芯片，4800 万像素主摄', 5, 5999.00, 100, 1, 256),
-(2, '华为 MateBook X Pro', '13代酷睿 i7，3K OLED 触控屏', 6, 8999.00, 50, 1, 128),
-(3, 'Sony WH-1000XM5 降噪耳机', '行业领先降噪，30小时续航', 7, 2499.00, 200, 1, 512),
-(4, '男士商务休闲夹克', '纯棉面料，韩版修身', 8, 299.00, 300, 1, 89),
-(5, '女士碎花连衣裙', '雪纺面料，夏季新款', 9, 199.00, 500, 1, 156),
-(6, '深入理解计算机系统（第3版）', 'CSAPP 经典教材，程序员必读', 3, 139.00, 1000, 1, 1024),
-(7, '小米智能音箱 Pro', '支持语音控制，HomeKit 适配', 7, 399.00, 80, 1, 320),
-(8, 'iPad Air M2', '10.9英寸全面屏，M2 芯片加持', 5, 4399.00, 60, 1, 78),
-(9, '简约台灯 LED 护眼', '三档色温，无频闪护眼台灯', 4, 89.00, 400, 1, 234),
-(10, '无线蓝牙键盘', '超薄便携，兼容多设备', 7, 159.00, 180, 1, 421);
+INSERT IGNORE INTO products (id, name, description, category_id, price, stock, status, sales, main_image) VALUES
+(1, 'iPhone 15 智能手机', '全新 A16 芯片，4800 万像素主摄', 5, 5999.00, 100, 1, 256, '/uploads/phone.svg'),
+(2, '华为 MateBook X Pro', '13代酷睿 i7，3K OLED 触控屏', 6, 8999.00, 50, 1, 128, '/uploads/laptop.svg'),
+(3, 'Sony WH-1000XM5 降噪耳机', '行业领先降噪，30小时续航', 7, 2499.00, 200, 1, 512, '/uploads/headphone.svg'),
+(4, '男士商务休闲夹克', '纯棉面料，韩版修身', 8, 299.00, 300, 1, 89, '/uploads/jacket.svg'),
+(5, '女士碎花连衣裙', '雪纺面料，夏季新款', 9, 199.00, 500, 1, 156, '/uploads/dress.svg'),
+(6, '深入理解计算机系统（第3版）', 'CSAPP 经典教材，程序员必读', 3, 139.00, 1000, 1, 1024, '/uploads/book.svg'),
+(7, '小米智能音箱 Pro', '支持语音控制，HomeKit 适配', 7, 399.00, 80, 1, 320, '/uploads/speaker.svg'),
+(8, 'iPad Air M2', '10.9英寸全面屏，M2 芯片加持', 5, 4399.00, 60, 1, 78, '/uploads/tablet.svg'),
+(9, '简约台灯 LED 护眼', '三档色温，无频闪护眼台灯', 4, 89.00, 400, 1, 234, '/uploads/lamp.svg'),
+(10, '无线蓝牙键盘', '超薄便携，兼容多设备', 7, 159.00, 180, 1, 421, '/uploads/keyboard.svg');
