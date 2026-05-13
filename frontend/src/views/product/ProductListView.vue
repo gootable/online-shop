@@ -166,15 +166,18 @@ function changePage(p: number) {
                     'depth-2': cat.depth >= 2,
                     expanded: cat.isParent && cat.expanded
                   }"
-                  @click="cat.isParent ? toggleExpand(cat) : selectCategory(cat.id)"
                 >
-                  <span v-if="cat.isParent" class="cat-arrow">
+                  <!-- Expand/collapse arrow (parents only) -->
+                  <span v-if="cat.isParent" class="cat-arrow"
+                    @click.stop="toggleExpand(cat)"
+                    role="button" :aria-label="cat.expanded ? '折叠' : '展开'">
                     <el-icon :size="14" class="arrow-icon">
                       <ArrowRight v-if="!cat.expanded" />
                       <ArrowDown v-else />
                     </el-icon>
                   </span>
-                  <span class="cat-text" @click.stop="cat.isParent ? selectCategory(cat.id) : undefined">
+                  <!-- Full-width clickable label -->
+                  <span class="cat-text" @click="selectCategory(cat.id)">
                     {{ cat.name }}
                   </span>
                   <span v-if="cat.isParent" class="cat-count">{{ countChildren(cat) }}</span>
@@ -267,10 +270,10 @@ function changePage(p: number) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
+  min-height: 44px;              /* Minimum touch target */
+  padding: 8px 12px;
   margin: 2px 4px;
   border-radius: 8px;
-  cursor: pointer;
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   transition: all var(--transition-fast);
@@ -298,6 +301,8 @@ function changePage(p: number) {
   border-radius: 0;
   margin-left: 0;
   margin-right: 0;
+  cursor: pointer;
+  min-height: 44px;
 }
 
 .cat-item.all-item:hover {
@@ -315,7 +320,6 @@ function changePage(p: number) {
 .cat-item.depth-0 {
   font-weight: 600;
   color: var(--color-text-primary);
-  padding: 10px 12px;
   margin-top: 4px;
 }
 
@@ -349,32 +353,37 @@ function changePage(p: number) {
   border-left-color: var(--color-primary);
 }
 
-/* Arrow icon */
+/* Arrow icon — only clickable area for expand/collapse */
 .cat-arrow {
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--color-text-placeholder);
-  transition: transform var(--transition-fast);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.cat-item:hover .cat-arrow {
-  color: var(--color-text-secondary);
+.cat-arrow:hover {
+  background: #ECECEC;
+  color: var(--color-text-primary);
 }
 
 .arrow-icon {
   transition: transform var(--transition-fast);
 }
 
-/* Category text */
+/* Category text — full-row click to select category */
 .cat-text {
   flex: 1;
+  cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 4px 0;
 }
 
 /* Child count badge */
@@ -382,9 +391,11 @@ function changePage(p: number) {
   font-size: 11px;
   color: var(--color-text-placeholder);
   background: #F0F0F0;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 10px;
   flex-shrink: 0;
+  min-width: 20px;
+  text-align: center;
 }
 
 .cat-item.active .cat-count {

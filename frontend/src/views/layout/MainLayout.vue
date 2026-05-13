@@ -79,15 +79,18 @@ function handleLogout() {
         </router-link>
 
         <div class="header-search">
-          <el-input v-model="keyword" placeholder="搜索你想要的..." size="large"
-            @keyup.enter="handleSearch" clearable
-            class="search-input">
-            <template #suffix>
-              <el-button type="primary" class="search-btn" @click="handleSearch">
-                <el-icon :size="18"><Search /></el-icon>
-              </el-button>
-            </template>
-          </el-input>
+          <div class="search-box">
+            <el-input v-model="keyword" placeholder="搜索你想要的..." size="large"
+              @keyup.enter="handleSearch" clearable
+              class="search-input">
+              <template #prefix>
+                <el-icon :size="18" class="search-prefix-icon"><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-button type="danger" class="search-btn" @click="handleSearch">
+              <el-icon :size="18"><Search /></el-icon>
+            </el-button>
+          </div>
           <div class="hot-words">
             <span v-for="w in ['手机', '耳机', '连衣裙', '台灯']" :key="w"
               class="hot-word" @click="keyword=w;handleSearch()">{{ w }}</span>
@@ -240,20 +243,77 @@ function handleLogout() {
 .header-search {
   flex: 1;
   max-width: 560px;
-  position: relative;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #F5F5F5;
+  border-radius: 24px;
+  border: 2px solid transparent;
+  transition: all var(--transition-normal);
+  overflow: hidden;
+}
+
+.search-box:hover {
+  background: #EEEEEE;
+  border-color: #E0E0E0;
+}
+
+.search-box:focus-within {
+  background: var(--color-white);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
 }
 
 .search-input :deep(.el-input__wrapper) {
-  border-radius: 20px 0 0 20px;
-  border-right: none;
-  box-shadow: 2px 0 0 0 var(--color-primary);
+  border-radius: 0;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 8px 4px 8px 16px;
+  transition: none;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  box-shadow: none !important;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: none !important;
+}
+
+.search-input :deep(.el-input__inner) {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+
+.search-input :deep(.el-input__inner::placeholder) {
+  color: #B0B0B0;
+}
+
+.search-prefix-icon {
+  color: #B0B0B0;
+  flex-shrink: 0;
+}
+
+.search-box:focus-within .search-prefix-icon {
+  color: var(--color-primary);
 }
 
 .search-btn {
   height: 40px;
-  border-radius: 0 20px 20px 0 !important;
-  padding: 0 20px !important;
-  margin: 0 !important;
+  min-width: 48px;
+  border-radius: 20px !important;
+  margin: 4px 4px 4px 0 !important;
+  padding: 0 16px !important;
+  flex-shrink: 0;
 }
 
 .hot-words {
